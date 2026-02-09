@@ -4,7 +4,7 @@
 mkdir build
 cmake -B build -S .
 cmake --build build
-./Main float или ./Main double 
+./build/Main float или ./build/Main double 
 ```
 
 | Вывод double | Вывод float |
