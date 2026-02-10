@@ -1,13 +1,14 @@
 #include <iostream>
 #include <cmath>
 #include <string.h>
+#include <vector>
 
 template <typename T>
 void do_arr()
 {
     int n = pow(10,7);
     T count = T(0);
-    T* arr = (T*)malloc(n * sizeof(T));
+    std::vector<T> arr(n);
 
     for(int i = 0; i < n; i++)
     {
@@ -15,8 +16,6 @@ void do_arr()
         count += arr[i];
     }
     std::cout<<count;
-
-    free(arr);
 }
 
 
