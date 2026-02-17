@@ -2,10 +2,13 @@
 #include <cmath>
 #include <string.h>
 #include <vector>
+#include <chrono>
 
 template <typename T>
 void do_arr()
 {
+    const auto start{std::chrono::steady_clock::now()};
+
     int n = pow(10,7);
     T count = T(0);
     std::vector<T> arr(n);
@@ -15,7 +18,11 @@ void do_arr()
         arr[i] = sin(2 * M_PI * i / n);
         count += arr[i];
     }
-    std::cout<<count;
+
+    const auto end{std::chrono::steady_clock::now()};
+    const std::chrono::duration<double> dur{end-start};
+    std::cout<<count<<std::endl;
+    std::cout<<dur.count();
 }
 
 
