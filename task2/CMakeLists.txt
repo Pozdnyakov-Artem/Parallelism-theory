@@ -1,3 +1,5 @@
+# export OMP_NUM_THREADS
+
 cmake_minimum_required(VERSION 3.5)
 
 project(2.1)
@@ -9,4 +11,11 @@ add_executable(first)
 target_sources(first
     PRIVATE
     1.cc
+)
+
+add_executable(second)
+
+target_sources(second
+    PRIVATE
+    2.cc
 )
