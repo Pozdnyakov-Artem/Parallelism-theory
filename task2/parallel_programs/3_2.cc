@@ -81,10 +81,10 @@ int main()
 
         time.push_back(dur.count());
 
-        for(int i = 0; i<5; i++)
-        {   
-            std::cout<<x[i]<<std::endl;
-        }
+        // for(int i = 0; i<5; i++)
+        // {   
+        //     std::cout<<x[i]<<std::endl;
+        // }
 
     }
 

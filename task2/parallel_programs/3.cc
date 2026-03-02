@@ -79,32 +79,46 @@ void simple_iteration(const std::vector<double> &A, std::vector<double> &x, cons
 
 int main()
 {
-    // std::cout<<lr;
-    std::vector<double> A(N*N);
-    std::vector<double> b(N);
-    std::vector<double> x(N, 0);
+    std::vector<double> time;
 
-    for(int i = 0; i<N; i++)
+    for(int i=0;i<4;i++)
     {
-        for(int j = 0; j<N; j++)
+
+        // std::cout<<lr;
+        std::vector<double> A(N*N);
+        std::vector<double> b(N);
+        std::vector<double> x(N, 0);
+
+        for(int i = 0; i<N; i++)
         {
-            if(i==j) A[i*N+j] = 2;
-            else A[i*N+j] = 1;
+            for(int j = 0; j<N; j++)
+            {
+                if(i==j) A[i*N+j] = 2;
+                else A[i*N+j] = 1;
+            }
+            b[i] = N+1;
         }
-        b[i] = N+1;
+
+
+        const auto start{std::chrono::steady_clock::now()};
+        simple_iteration(A,x,b);
+        const auto end{std::chrono::steady_clock::now()};
+        const std::chrono::duration<double> dur{end-start};
+        std::cout<<"time: "<<dur.count()<<std::endl;
+
+        time.push_back(dur.count());
+        // for(int i = 0; i<5; i++)
+        // {   
+        //     std::cout<<x[i]<<std::endl;
+        // }
+
     }
 
+    double count=0;
+    for(int i=0; i<4; i++)
+        count+=time[i];
 
-    const auto start{std::chrono::steady_clock::now()};
-    simple_iteration(A,x,b);
-    const auto end{std::chrono::steady_clock::now()};
-    const std::chrono::duration<double> dur{end-start};
-    std::cout<<dur.count()<<std::endl;
-    for(int i = 0; i<5; i++)
-    {   
-        std::cout<<x[i]<<std::endl;
-    }
-
+    std::cout<<"avg_time: "<<count/4<<std::endl;
 
     return 0;
 }
