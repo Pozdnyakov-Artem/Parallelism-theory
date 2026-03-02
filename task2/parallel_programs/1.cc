@@ -9,9 +9,9 @@ int n = 20000;
 
 int main()
 {
-    // std::vector<double> time;
-    // for(int h = 0 ; h<4; h++)
-    // {
+    std::vector<double> time;
+    for(int h = 0 ; h<4; h++)
+    {
         const auto start{std::chrono::steady_clock::now()};
 
         std::vector<double> a(n*n);
@@ -53,7 +53,7 @@ int main()
         const std::chrono::duration<double> dur{end-start};
         std::cout<<"time: "<<dur.count()<<std::endl;
 
-        // time.push_back(dur.count());
+        time.push_back(dur.count());
 
         double count = 0;
 
@@ -63,13 +63,13 @@ int main()
         }
 
         std::cout<<count<<std::endl;
-    // }
+    }
 
-    // double count = 0;
+    double count = 0;
 
-    // for(auto i : time)
-    //     count+=i;
+    for(auto i : time)
+        count+=i;
 
-    // std::cout<<"avg_time: "<<count/4;
+    std::cout<<"avg_time: "<<count/4;
 
 }
