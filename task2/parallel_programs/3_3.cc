@@ -8,14 +8,10 @@ double E = 1e-10;
 int N = 12000;
 double lr = 0.9 * (2.0/(N+1));
 
-void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vector<double> &b, int threads)
+void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vector<double> &b, int threads, double norm2)
 {
     std::vector<double> Ax(N);
     bool status = false;
-
-    double norm2 = 0;
-    for(int i = 0; i < N; i++)
-        norm2 += b[i] * b[i];
 
     #pragma omp parallel num_threads(threads)
     {
@@ -28,7 +24,6 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
                 if(i==j) A[i*N+j] = 2;
                 else A[i*N+j] = 1;
             }
-            b[i] = N+1;
         }
 
 
@@ -85,7 +80,13 @@ int main()
 
             const auto start{std::chrono::steady_clock::now()};
 
-            simple_iteration(A,x,b,threads);
+            double norm2 = 0;
+            for(int i = 0; i < N; i++){
+                b[i] = N+1;
+                norm2 += b[i] * b[i];
+            }
+
+            simple_iteration(A,x,b,threads, norm2);
             const auto end{std::chrono::steady_clock::now()};
             const std::chrono::duration<double> dur{end-start};
             std::cout<<"time "<<dur.count()<<std::endl;
