@@ -75,6 +75,7 @@ int main()
                 norm_b += b[i] * b[i];
             }
 
+
             simple_iteration(A,x,b, threads, norm_b);
 
             const auto end{std::chrono::steady_clock::now()};

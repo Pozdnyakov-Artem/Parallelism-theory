@@ -11,24 +11,17 @@ double lr = 0.9 * (2.0/(N+1));
 void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vector<double> &b, int threads)
 {
     std::vector<double> Ax(N);
-    int max_threads = omp_get_max_threads();
-    std::vector<double> norm_Ax(max_threads,0);
     bool status = false;
-    double norm2 = 0;
 
-    for(int i = 0; i < N; i++) {
+    double norm2 = 0;
+    for(int i = 0; i < N; i++)
         norm2 += b[i] * b[i];
-    }
 
     #pragma omp parallel num_threads(threads)
     {
-        int nthreads = omp_get_num_threads();
-        int threadid = omp_get_thread_num();
-        int items_per_thread = N / nthreads;
-        int lb = threadid * items_per_thread;
-        int ub = (threadid == nthreads - 1) ? (N-1) : (lb + items_per_thread - 1);
 
-        for(int i = lb; i <= ub; i++)
+        #pragma omp for schedule(static)
+        for(int i = 0; i < N; i++)
         {
             for(int j = 0; j < N; j++)
             {
@@ -38,17 +31,11 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
             b[i] = N+1;
         }
 
-        // double local_norm2 = 0.0;
-        // for(int i = lb; i <= ub; i++) {
-        //     local_norm2 += b[i] * b[i];
-        // }
-        // #pragma omp atomic
-        // norm2 += local_norm2;
-
 
         while (!status)
         {
-            for(int i = lb; i<=ub; i++)
+            #pragma omp for schedule(static)
+            for(int i = 0; i < N; i++)
             {
                 double su = 0;
                 for(int j = 0; j<N; j++)
@@ -57,34 +44,25 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
                 }
                 Ax[i] = (su - b[i]);
             }
-            #pragma omp barrier 
 
-            double sum1 = 0;
-            for(int i = lb; i<=ub; i++)
+            double norm1 = 0;
+            #pragma omp for schedule(static) reduction(+:norm1)
+            for(int i = 0; i < N; i++)
             {
-                sum1+= Ax[i]*Ax[i];
+                norm1 += Ax[i]*Ax[i];
             }
-            norm_Ax[threadid] = sum1;
-
-            #pragma omp barrier
 
             #pragma omp single
             {
-                double norm1 = 0;
-                for(int i = 0; i<nthreads; i++)
-                {
-                    norm1 += norm_Ax[i];
-                }
-
                 status = (norm1/norm2 < E);
             }
             #pragma omp barrier
 
-            for(int i = lb; i <= ub; i++)
+            #pragma omp for schedule(static)
+            for(int i = 0; i < N; i++)
             {
                 x[i] -= lr*Ax[i];
             }
-            #pragma omp barrier
         }
     }
 }
