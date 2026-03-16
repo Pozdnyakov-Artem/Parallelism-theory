@@ -16,6 +16,7 @@ add_executable(second_lin)
 
 add_executable(third)
 add_executable(third2)
+add_executable(third3)
 add_executable(third_lin)
 
 target_sources(first
@@ -56,6 +57,11 @@ target_sources(third
 target_sources(third2
     PRIVATE
     parallel_programs/3_2.cc
+)
+
+target_sources(third3
+    PRIVATE
+    parallel_programs/3_3.cc
 )
 
 target_sources(third_lin
