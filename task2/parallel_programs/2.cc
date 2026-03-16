@@ -60,7 +60,7 @@ int main()
         for(auto i : time)
             count+=i;
 
-        std::cout<<"num_threads: "<<threads<<" avg_time: "<<count/100;
+        std::cout<<"num_threads: "<<threads<<" avg_time: "<<count/100<<std::endl;
     }
 
     return 0;
