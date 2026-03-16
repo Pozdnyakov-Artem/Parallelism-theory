@@ -60,14 +60,14 @@ int main()
 
             time.push_back(dur.count());
 
-            double count = 0;
+            // double count = 0;
 
-            for(int i = 0; i < n; i++)
-            {
-                count+=c[i];
-            }
+            // for(int i = 0; i < n; i++)
+            // {
+            //     count+=c[i];
+            // }
 
-            std::cout<<count<<std::endl;
+            // std::cout<<count<<std::endl;
         }
 
         double count = 0;
