@@ -106,6 +106,7 @@ int main()
             simple_iteration(A,x,b,threads);
             const auto end{std::chrono::steady_clock::now()};
             const std::chrono::duration<double> dur{end-start};
+            std::cout<<"time "<<dur.count()<<std::endl;
 
             time.push_back(dur.count());
 
