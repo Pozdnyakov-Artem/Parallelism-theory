@@ -7,7 +7,7 @@ int n = 20000;
 int main()
 {
     std::vector<double> time;
-    for(int h = 0 ; h<4; h++)
+    for(int h = 0 ; h<100; h++)
     {
 
         const auto start{std::chrono::steady_clock::now()};
@@ -19,11 +19,11 @@ int main()
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++)
                 a[i * n + j] = i + j;
-
+            b[i] = i;
         }
 
-        for (int j = 0; j < n; j++)
-            b[j] = j;
+        // for (int j = 0; j < n; j++)
+        //     b[j] = j;
         
 
         for (int i = 0; i < n; i++) {
@@ -55,7 +55,7 @@ int main()
     for(auto i : time)
         count+=i;
 
-    std::cout<<"avg_time: "<<count/4;
+    std::cout<<"avg_time: "<<count/100;
 
 
 }
