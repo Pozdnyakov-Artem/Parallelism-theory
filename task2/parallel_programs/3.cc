@@ -17,6 +17,7 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
     double norm2 = 0;
 
     for(int i = 0; i < N; i++) {
+        b[i] = N+1;
         norm2 += b[i] * b[i];
     }
 
@@ -35,7 +36,6 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
                 if(i==j) A[i*N+j] = 2;
                 else A[i*N+j] = 1;
             }
-            b[i] = N+1;
         }
 
         // double local_norm2 = 0.0;
