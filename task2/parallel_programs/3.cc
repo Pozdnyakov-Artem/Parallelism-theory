@@ -75,7 +75,8 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
                 status = (norm1/norm2 < E);
             }
             #pragma omp barrier
-            if(status)break;
+
+            // if(status)break;
 
             for(int i = lb; i <= ub; i++)
             {
