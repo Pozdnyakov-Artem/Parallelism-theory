@@ -7,9 +7,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
 add_executable(first)
+add_executable(first2)
 add_executable(first_lin)
 
 add_executable(second)
+add_executable(second2)
 add_executable(second_lin)
 
 add_executable(third)
@@ -21,6 +23,11 @@ target_sources(first
     parallel_programs/1.cc
 )
 
+target_sources(first2
+    PRIVATE
+    parallel_programs/1_2.cc
+)
+
 target_sources(first_lin
     PRIVATE
     linear_programs/linear_prog1.cc
@@ -29,6 +36,11 @@ target_sources(first_lin
 target_sources(second
     PRIVATE
     parallel_programs/2.cc
+)
+
+target_sources(second2
+    PRIVATE
+    parallel_programs/2_2.cc
 )
 
 target_sources(second_lin
