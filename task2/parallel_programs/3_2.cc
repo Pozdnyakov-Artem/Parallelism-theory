@@ -8,15 +8,8 @@ double E = 1e-10;
 int N = 12000;
 double lr = 0.9 * (2.0/(N+1));
 
-void simple_iteration(const std::vector<double> &A, std::vector<double> &x, const std::vector<double> &b, int threads, double norm_b)
+void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vector<double> &b, int threads, double norm_b)
 {
-    // double norm_b = 0;
-
-    // #pragma omp parallel for reduction(+:norm_b) num_threads(threads)
-    // for(int i = 0; i < N; i++)
-    // {
-    //     norm_b+=b[i]*b[i];
-    // }
 
     std::vector<double> Ax_b(N);
 
@@ -67,7 +60,7 @@ int main()
             std::vector<double> x(N);
             double norm_b = 0;
 
-            #pragma omp parallel for schedule(static) num_threads(threads)
+            #pragma omp parallel for schedule(static) num_threads(threads) reduction(+:norm_b)
 
             for(int i = 0; i<N; i++)
             {
@@ -89,18 +82,13 @@ int main()
 
             time.push_back(dur.count());
 
-            // for(int i = 0; i<5; i++)
-            // {   
-            //     std::cout<<x[i]<<std::endl;
-            // }
-
         }
 
         double count = 0;
-        for(int i = 0; i<4; i++)
+        for(int i = 0; i<iter; i++)
             count+=time[i];
 
-        std::cout<<"threads_num: "<<threads<<" avg_time: "<<count/4<<std::endl;
+        std::cout<<"threads_num: "<<threads<<" avg_time: "<<count/iter<<std::endl;
     }
 
 

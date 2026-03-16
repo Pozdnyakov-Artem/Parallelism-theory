@@ -8,13 +8,7 @@ int N = 12000;
 double lr = 0.9 * (2.0/(N+1));
 
 void simple_iteration(const std::vector<double> &A, std::vector<double> &x, const std::vector<double> &b, const double norm_b)
-{
-    // double norm_b = 0;
-
-    // for(int i = 0; i < N; i++)
-    // {
-    //     norm_b+=b[i]*b[i];
-    // }
+{   
 
     std::vector<double> Ax_b(N);
 
@@ -45,9 +39,10 @@ void simple_iteration(const std::vector<double> &A, std::vector<double> &x, cons
 
 int main()
 {
+    int iter = 25;
     std::vector<double> time;
 
-    for(int iter = 0; iter<25; iter++)
+    for(int h = 0; h < iter; h++)
     {
         const auto start{std::chrono::steady_clock::now()};
 
@@ -76,18 +71,13 @@ int main()
 
         time.push_back(dur.count());
 
-        // for(int i = 0; i<5; i++)
-        // {   
-        //     std::cout<<x[i]<<std::endl;
-        // }
-
     }
 
     double count = 0;
-    for(int i = 0; i<4; i++)
+    for(int i = 0; i < iter; i++)
         count+=time[i];
 
-    std::cout<<"avg_time: "<<count/25<<std::endl;
+    std::cout<<"avg_time: "<<count/iter<<std::endl;
 
 
     return 0;
