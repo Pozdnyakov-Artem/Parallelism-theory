@@ -96,11 +96,12 @@ int main()
 
         for(int i=0;i<iter;i++)
         {
-            const auto start{std::chrono::steady_clock::now()};
 
             std::vector<double> A(N*N);
             std::vector<double> b(N);
             std::vector<double> x(N, 0);
+
+            const auto start{std::chrono::steady_clock::now()};
 
             simple_iteration(A,x,b,threads);
             const auto end{std::chrono::steady_clock::now()};

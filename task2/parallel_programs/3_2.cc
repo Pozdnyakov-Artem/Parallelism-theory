@@ -53,12 +53,13 @@ int main()
 
         for(int h = 0; h < iter; h++)
         {
-            const auto start{std::chrono::steady_clock::now()};
 
             std::vector<double> A(N*N);
             std::vector<double> b(N);
             std::vector<double> x(N);
             double norm_b = 0;
+
+            const auto start{std::chrono::steady_clock::now()};
 
             #pragma omp parallel for schedule(static) num_threads(threads) reduction(+:norm_b)
 

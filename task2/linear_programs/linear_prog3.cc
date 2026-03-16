@@ -44,12 +44,13 @@ int main()
 
     for(int h = 0; h < iter; h++)
     {
-        const auto start{std::chrono::steady_clock::now()};
 
         std::vector<double> A(N*N);
         std::vector<double> b(N);
         std::vector<double> x(N);
         double norm_b = 0;
+
+        const auto start{std::chrono::steady_clock::now()};
 
         for(int i = 0; i<N; i++)
         {
