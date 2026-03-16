@@ -4,7 +4,7 @@
 #include <chrono>
 
 double E = 1e-10;
-int N = 10000;
+int N = 12000;
 double lr = 0.9 * (2.0/(N+1));
 
 void simple_iteration(const std::vector<double> &A, std::vector<double> &x, const std::vector<double> &b, const double norm_b)
@@ -49,13 +49,12 @@ int main()
 
     for(int iter = 0; iter<25; iter++)
     {
+        const auto start{std::chrono::steady_clock::now()};
 
         std::vector<double> A(N*N);
         std::vector<double> b(N);
         std::vector<double> x(N);
         double norm_b = 0;
-
-        const auto start{std::chrono::steady_clock::now()};
 
         for(int i = 0; i<N; i++)
         {
