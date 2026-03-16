@@ -52,7 +52,7 @@ int main()
             // std::cout<<"time: "<<dur.count()<<std::endl;
 
             time.push_back(dur.count());
-
+            std::cout<<h<<std::endl;
             // double count = 0;
 
             // for(int i = 0; i < n; i++)
