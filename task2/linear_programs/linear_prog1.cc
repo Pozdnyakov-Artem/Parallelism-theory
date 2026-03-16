@@ -2,12 +2,13 @@
 #include <chrono>
 #include <vector>
 
-int n = 20000;
+int n = 40000;
 
 int main()
 {
+    int iter = 25;
     std::vector<double> time;
-    for(int h = 0 ; h<100; h++)
+    for(int h = 0 ; h<iter; h++)
     {
 
         const auto start{std::chrono::steady_clock::now()};
@@ -55,7 +56,7 @@ int main()
     for(auto i : time)
         count+=i;
 
-    std::cout<<"avg_time: "<<count/100;
+    std::cout<<"avg_time: "<<count/iter;
 
 
 }
