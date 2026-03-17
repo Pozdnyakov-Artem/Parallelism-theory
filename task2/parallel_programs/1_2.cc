@@ -18,14 +18,11 @@ int main()
 
         for(int h = 0 ; h<iter; h++)
         {
-            const auto start{std::chrono::steady_clock::now()};
-
             std::vector<double> a(n*n);
             std::vector<double> b(n);
             std::vector<double> c(n);
 
-            // for (int j = 0; j < n; j++)
-            //         b[j] = j;
+            const auto start{std::chrono::steady_clock::now()};
 
             #pragma omp parallel num_threads(threads)
             {
@@ -35,9 +32,6 @@ int main()
                         a[i * n + j] = i + j;
                     b[i] = i;
                 }
-
-                // for (int j = lb; j < ub; j++)
-                //     b[j] = j;
 
                 #pragma omp for schedule(static)
                 for (int i = 0; i < n; i++)
@@ -50,18 +44,9 @@ int main()
             }
             const auto end{std::chrono::steady_clock::now()};
             const std::chrono::duration<double> dur{end-start};
-            // std::cout<<"time: "<<dur.count()<<std::endl;
 
             time.push_back(dur.count());
             std::cout<<h<<std::endl;
-            // double count = 0;
-
-            // for(int i = 0; i < n; i++)
-            // {
-            //     count+=c[i];
-            // }
-
-            // std::cout<<count<<std::endl;
         }
 
         double count = 0;

@@ -11,11 +11,11 @@ int main()
     for(int h = 0 ; h<iter; h++)
     {
 
-        const auto start{std::chrono::steady_clock::now()};
-
         std::vector<double> a(n*n);
         std::vector<double> b(n);
         std::vector<double> c(n);
+
+        const auto start{std::chrono::steady_clock::now()};
         
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++)

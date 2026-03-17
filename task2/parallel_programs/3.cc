@@ -38,14 +38,6 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
             }
         }
 
-        // double local_norm2 = 0.0;
-        // for(int i = lb; i <= ub; i++) {
-        //     local_norm2 += b[i] * b[i];
-        // }
-        // #pragma omp atomic
-        // norm2 += local_norm2;
-
-
         while (!status)
         {
             for(int i = lb; i<=ub; i++)
