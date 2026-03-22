@@ -15,14 +15,14 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
 
     #pragma omp parallel num_threads(threads)
     {
-        #pragma omp for schedule(dynamic, 100) reduction(+:norm2)
+        #pragma omp for schedule(dynamic, 200) reduction(+:norm2)
         for(int i = 0; i < N; i++){
             norm2 += b[i] * b[i];
         }
 
         while (!status)
         {
-            #pragma omp for schedule(dynamic, 100)
+            #pragma omp for schedule(dynamic, 200)
             for(int i = 0; i < N; i++)
             {
                 double su = 0;
@@ -34,7 +34,7 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
             }
 
             double norm1 = 0;
-            #pragma omp for schedule(dynamic, 100) reduction(+:norm1)
+            #pragma omp for schedule(dynamic, 200) reduction(+:norm1)
             for(int i = 0; i < N; i++)
             {
                 norm1 += Ax[i]*Ax[i];
@@ -46,7 +46,7 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
             }
             #pragma omp barrier
 
-            #pragma omp for schedule(dynamic, 100)
+            #pragma omp for schedule(dynamic, 200)
             for(int i = 0; i < N; i++)
             {
                 x[i] -= lr*Ax[i];
@@ -72,7 +72,7 @@ int main()
             std::vector<double> x(N, 0);
             std::vector<double> Ax(N);
 
-            #pragma omp parallel num_threads(threads) for schedule(dynamic, 100)
+            #pragma omp parallel num_threads(threads) for schedule(dynamic, 200)
             for(int i = 0; i < N; i++)
             {
                 for(int j = 0; j < N; j++)
