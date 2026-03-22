@@ -5,11 +5,11 @@
 #include <cmath>
 
 
-int n = 20000;
+int n = 40000;
 
 int main()
 {
-    int iter = 100;
+    int iter = 25;
     std::vector<int> threads_num = {2,4,6,8,16,20,40};
 
     for(const int threads : threads_num)

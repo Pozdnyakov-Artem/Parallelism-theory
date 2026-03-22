@@ -2,11 +2,11 @@
 #include <chrono>
 #include <vector>
 
-int n = 20000;
+int n = 40000;
 
 int main()
 {
-    int iter = 100;
+    int iter = 25;
     std::vector<double> time;
     for(int h = 0 ; h<iter; h++)
     {
