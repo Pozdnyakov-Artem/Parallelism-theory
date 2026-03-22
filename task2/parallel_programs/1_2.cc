@@ -5,11 +5,11 @@
 #include <cmath>
 
 
-int n = 40000;
+int n = 20000;
 
 int main()
 {
-    int iter = 25;
+    int iter = 100;
     std::vector<int> threads_num = {2,4,6,8,16,20,40};
 
     for(const int threads : threads_num)
@@ -24,15 +24,16 @@ int main()
 
             const auto start{std::chrono::steady_clock::now()};
 
+            
+            #pragma omp parallel for schedule(static)
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++)
+                    a[i * n + j] = i + j;
+                b[i] = i;
+            }
+
             #pragma omp parallel num_threads(threads)
             {
-                #pragma omp for schedule(static)
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < n; j++)
-                        a[i * n + j] = i + j;
-                    b[i] = i;
-                }
-
                 #pragma omp for schedule(static)
                 for (int i = 0; i < n; i++)
                 {
