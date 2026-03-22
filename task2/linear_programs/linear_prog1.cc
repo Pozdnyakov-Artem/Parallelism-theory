@@ -2,11 +2,11 @@
 #include <chrono>
 #include <vector>
 
-int n = 40000;
+int n = 20000;
 
 int main()
 {
-    int iter = 25;
+    int iter = 100;
     std::vector<double> time;
     for(int h = 0 ; h<iter; h++)
     {
@@ -14,18 +14,14 @@ int main()
         std::vector<double> a(n*n);
         std::vector<double> b(n);
         std::vector<double> c(n);
-
-        const auto start{std::chrono::steady_clock::now()};
         
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++)
                 a[i * n + j] = i + j;
             b[i] = i;
         }
-
-        // for (int j = 0; j < n; j++)
-        //     b[j] = j;
         
+        const auto start{std::chrono::steady_clock::now()};
 
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
