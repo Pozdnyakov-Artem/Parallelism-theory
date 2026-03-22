@@ -21,9 +21,6 @@ int main()
             std::vector<double> a(n*n);
             std::vector<double> b(n);
             std::vector<double> c(n);
-
-            const auto start{std::chrono::steady_clock::now()};
-
             
             #pragma omp parallel for schedule(static)
             for (int i = 0; i < n; i++) {
@@ -31,6 +28,8 @@ int main()
                     a[i * n + j] = i + j;
                 b[i] = i;
             }
+
+            const auto start{std::chrono::steady_clock::now()};
 
             #pragma omp parallel num_threads(threads)
             {
