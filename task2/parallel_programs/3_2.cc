@@ -13,6 +13,8 @@ void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vecto
     double norm_b = 0;
 
     #pragma omp parallel for schedule(static) num_threads(threads) reduction(+:norm_b)
+    for(int i = 0; i < N; i++)
+        norm_b += b[i]*b[i];
 
     while (true)
     {   
