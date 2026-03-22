@@ -18,6 +18,8 @@ add_executable(third)
 add_executable(third2)
 add_executable(third3)
 add_executable(third_lin)
+add_executable(thirdd)
+add_executable(thirdg)
 
 target_sources(first
     PRIVATE
@@ -67,4 +69,14 @@ target_sources(third3
 target_sources(third_lin
     PRIVATE
     linear_programs/linear_prog3.cc
+)
+
+target_sources(thirdg
+    PRIVATE
+    parallel_programs/3_guided.cc
+)
+
+target_sources(thirdd
+    PRIVATE
+    parallel_programs/3_dynamic.cc
 )
