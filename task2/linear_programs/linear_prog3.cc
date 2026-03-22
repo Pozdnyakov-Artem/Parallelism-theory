@@ -7,10 +7,12 @@ double E = 1e-10;
 int N = 12000;
 double lr = 0.9 * (2.0/(N+1));
 
-void simple_iteration(const std::vector<double> &A, std::vector<double> &x, const std::vector<double> &b, const double norm_b)
+void simple_iteration(const std::vector<double> &A, std::vector<double> &x, const std::vector<double> &b, std::vector<double> Ax_b)
 {   
+    double norm_b = 0;
 
-    std::vector<double> Ax_b(N);
+    for(int i = 0; i < N; i++)
+        norm_b+=b[i]*b[i];
 
     while (true)
     {
@@ -47,10 +49,8 @@ int main()
 
         std::vector<double> A(N*N);
         std::vector<double> b(N);
-        std::vector<double> x(N);
-        double norm_b = 0;
-
-        const auto start{std::chrono::steady_clock::now()};
+        std::vector<double> x(N,0);
+        std::vector<double> Ax_b(N);
 
         for(int i = 0; i<N; i++)
         {
@@ -60,11 +60,11 @@ int main()
                 else A[i*N+j] = 1;
             }
             b[i] = N+1;
-            norm_b+=b[i]*b[i];
-            x[i] = 0;
         }
 
-        simple_iteration(A,x,b, norm_b);
+        const auto start{std::chrono::steady_clock::now()};
+
+        simple_iteration(A,x,b,Ax_b);
 
         const auto end{std::chrono::steady_clock::now()};
         const std::chrono::duration<double> dur{end-start};

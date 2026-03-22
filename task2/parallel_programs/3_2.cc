@@ -8,10 +8,11 @@ double E = 1e-10;
 int N = 12000;
 double lr = 0.9 * (2.0/(N+1));
 
-void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vector<double> &b, int threads, double norm_b)
+void simple_iteration(std::vector<double> &A, std::vector<double> &x, std::vector<double> &b,std::vector<double> &Ax_b, int threads)
 {
+    double norm_b = 0;
 
-    std::vector<double> Ax_b(N);
+    #pragma omp parallel for schedule(static) num_threads(threads) reduction(+:norm_b)
 
     while (true)
     {   
@@ -56,12 +57,10 @@ int main()
 
             std::vector<double> A(N*N);
             std::vector<double> b(N);
-            std::vector<double> x(N);
-            double norm_b = 0;
+            std::vector<double> x(N,0);
+            std::vector<double> Ax_b(N);
 
-            const auto start{std::chrono::steady_clock::now()};
-
-            #pragma omp parallel for schedule(static) num_threads(threads) reduction(+:norm_b)
+            #pragma omp parallel for schedule(static) num_threads(threads)
 
             for(int i = 0; i<N; i++)
             {
@@ -71,12 +70,11 @@ int main()
                     else A[i*N+j] = 1;
                 }
                 b[i] = N+1;
-                x[i] = 0;
-                norm_b += b[i] * b[i];
             }
 
+            const auto start{std::chrono::steady_clock::now()};
 
-            simple_iteration(A,x,b, threads, norm_b);
+            simple_iteration(A,x,b,Ax_b,threads);
 
             const auto end{std::chrono::steady_clock::now()};
             const std::chrono::duration<double> dur{end-start};
