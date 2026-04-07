@@ -82,7 +82,9 @@ public:
         std::lock_guard<std::mutex> lock(state_mutex);
         is_running = true;
         for (unsigned int i = 0; i < worker_count; ++i) {
-            workers.emplace_back(&Server::work, this);
+            workers.emplace_back([this](std::stop_token token) {
+                this->work(token);
+            });
         }
     }
 
