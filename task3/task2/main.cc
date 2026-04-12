@@ -1,3 +1,4 @@
+#include <chrono>
 #include <vector>
 #include <queue>
 #include <unordered_map>
@@ -6,6 +7,7 @@
 #include <condition_variable>
 #include <atomic>
 #include <thread>
+#include <future>
 #include <cmath>
 #include <utility>
 #include <iostream>
@@ -32,18 +34,18 @@ template <typename T>
 class Server {
 private:
     std::vector<std::jthread> workers;
-    std::queue<std::pair<int, std::function<T()>>> tasks;
-    std::unordered_map<size_t, T> results;
+    using Task = std::function<void()>;
+    std::queue<std::pair<int, Task>> tasks;
+    std::unordered_map<size_t, std::shared_ptr<std::promise<T>>> promises;
 
     std::atomic<bool> is_running{false};
     std::atomic<int> id = 0;
 
-    std::condition_variable cv_results;
     std::condition_variable cv_tasks;
 
     std::mutex state_mutex;
-    std::mutex results_mutex;
     std::mutex queue_mutex;
+    std::mutex results_mutex;
     
     void work(std::stop_token token) {
         while(true)
@@ -63,13 +65,12 @@ private:
                 tasks.pop();
                 lock.unlock();
 
-                T result = task();
+                task();
 
                 {
                     std::lock_guard<std::mutex> rlock(results_mutex);
-                    results[id] = result;
+                    promises.erase(id);
                 }
-                cv_results.notify_all();
             }
         }
     }
@@ -77,6 +78,12 @@ private:
 
 public:
     Server() : is_running(false) {};
+    ~Server() {
+        stop();
+        for (auto& t : workers) {
+            if (t.joinable()) t.join();
+        }
+    }
 
     void start(int worker_count) {
         std::lock_guard<std::mutex> lock(state_mutex);
@@ -98,28 +105,30 @@ public:
     }
 
     template <typename Func, typename... Args>
-    int add_task(Func&& func, Args&&... args) {
+    auto add_task(Func&& func, Args&&... args) {
+
+        auto promise = std::make_shared<std::promise<T>>();
+        std::future<T> future = promise->get_future();
+
         int cur_id = ++id;
         {
             std::lock_guard<std::mutex> lock(queue_mutex);
-            tasks.emplace(std::pair{cur_id,[function = std::forward<Func>(func), ...arguments = std::forward<Args>(args)]()mutable{
-                return std::invoke(function, arguments...);
+            tasks.emplace(std::pair{cur_id,[
+                promise,
+                function = std::forward<Func>(func),
+                 ...arguments = std::forward<Args>(args)]
+            ()mutable{
+                if constexpr (std::is_same_v<T, void>) {
+                    std::invoke(function, arguments...);
+                    promise->set_value();
+                } else {
+                    promise->set_value(std::invoke(function, arguments...));
+                }
             }});
         }
         cv_tasks.notify_one();
         // std::cout<<"add task"<<std::endl;
-        return cur_id;
-    }
-
-    T request_result(size_t id) {
-        std::unique_lock<std::mutex> lock(results_mutex);
-        
-        cv_results.wait(lock, [this, id]() { 
-            return results.find(id) != results.end(); 
-        });
-        T result = results[id];
-        results.erase(id);
-        return result;
+        return std::make_pair(cur_id, std::move(future));
     }
 
 };
@@ -189,18 +198,21 @@ struct ThreadRng {
 std::mutex file_mutex;
 
 int main() {
-    int N = 100;
+    int N = 10000;
     std::ofstream out("res.txt");
+
+    const auto start{std::chrono::steady_clock::now()};
+
     Server<double> server;
-    server.start(5);
+    server.start(10);
 
     std::vector<std::jthread> clients;
     clients.emplace_back([&out,N,&server]() {
         ThreadRng rng;
         for (int i = 0; i < N; i++){
             double x = rng.get_sin_arg();
-            int id = server.add_task([](double x) { return fun_sin(x); }, x);
-            double res = server.request_result(id);
+            auto [id, future] = server.add_task([](double x) { return fun_sin(x); }, x);
+            double res = future.get();
             // std::cout << "Sin: " << res << std::endl;
             {
                 std::lock_guard<std::mutex> lock(file_mutex);
@@ -213,8 +225,8 @@ int main() {
         ThreadRng rng;
         for (int i = 0; i < N; i++){
             double x = rng.get_sqrt_arg();
-            int id = server.add_task([](double x) { return fun_sqrt(x); }, x);
-            double res = server.request_result(id);
+            auto [id, future] = server.add_task([](double x) { return fun_sqrt(x); }, x);
+            double res = future.get();
             {
                 std::lock_guard<std::mutex> lock(file_mutex);
                 out << "Sqrt "<< x<< " = " << res <<" id = "<<id<<std::endl;
@@ -227,8 +239,8 @@ int main() {
         for (int i = 0; i < N; i++){
             int x = rng.get_pow_arg();
             int y = rng.get_pow_arg();
-            int id = server.add_task([](double b, double e) { return fun_pow(b, e); }, x, y);
-            double res = server.request_result(id);
+            auto [id, future] = server.add_task([](double b, double e) { return fun_pow(b, e); }, x, y);
+            double res = future.get();
             {
                 std::lock_guard<std::mutex> lock(file_mutex);
                 out << "Pow " << x << " " << y << " = " << res << " id = " << id << std::endl;
@@ -239,6 +251,10 @@ int main() {
     for (auto& client : clients) {
         client.join();
     }
+
+    const auto end{std::chrono::steady_clock::now()};
+    const std::chrono::duration<double> dur{end-start};
+    std::cout<<"time "<<dur.count()<<std::endl;
 
     out.flush();
     server.stop();
