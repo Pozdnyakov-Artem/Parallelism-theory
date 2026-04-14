@@ -46,6 +46,9 @@ private:
     std::mutex state_mutex;
     std::mutex queue_mutex;
     std::mutex results_mutex;
+
+    std::unordered_map<size_t, std::shared_future<T>> shared_futures;
+    std::mutex futures_mutex;
     
     void work(std::stop_token token) {
         while(true)
@@ -67,10 +70,10 @@ private:
 
                 task();
 
-                {
-                    std::lock_guard<std::mutex> rlock(results_mutex);
-                    promises.erase(id);
-                }
+                // {
+                //     std::lock_guard<std::mutex> rlock(results_mutex);
+                //     promises.erase(id);
+                // }
             }
         }
     }
@@ -78,12 +81,6 @@ private:
 
 public:
     Server() : is_running(false) {};
-    ~Server() {
-        stop();
-        for (auto& t : workers) {
-            if (t.joinable()) t.join();
-        }
-    }
 
     void start(int worker_count) {
         std::lock_guard<std::mutex> lock(state_mutex);
@@ -104,13 +101,33 @@ public:
         cv_tasks.notify_all();
     }
 
+    T request_result(size_t id) {
+        std::shared_future<T> future;
+
+        {
+            std::lock_guard<std::mutex> lock(futures_mutex);
+            auto it = shared_futures.find(id);
+            future = it->second;
+            shared_futures.erase(it);
+        }
+    
+        return future.get();
+    }
+
     template <typename Func, typename... Args>
-    auto add_task(Func&& func, Args&&... args) {
+    int add_task(Func&& func, Args&&... args) {
 
         auto promise = std::make_shared<std::promise<T>>();
         std::future<T> future = promise->get_future();
+        auto shared_future = future.share();  
 
         int cur_id = ++id;
+
+        {
+            std::lock_guard<std::mutex> lock(futures_mutex);
+            shared_futures.emplace(cur_id, shared_future);
+        }
+
         {
             std::lock_guard<std::mutex> lock(queue_mutex);
             tasks.emplace(std::pair{cur_id,[
@@ -128,7 +145,8 @@ public:
         }
         cv_tasks.notify_one();
         // std::cout<<"add task"<<std::endl;
-        return std::make_pair(cur_id, std::move(future));
+        return cur_id;
+        // return std::make_pair(cur_id, std::move(future));
     }
 
 };
@@ -209,41 +227,60 @@ int main() {
     std::vector<std::jthread> clients;
     clients.emplace_back([&out,N,&server]() {
         ThreadRng rng;
+
+        std::unordered_map<int,double> params;
+
         for (int i = 0; i < N; i++){
             double x = rng.get_sin_arg();
-            auto [id, future] = server.add_task([](double x) { return fun_sin(x); }, x);
-            double res = future.get();
+            int id = server.add_task([](double x) { return fun_sin(x); }, x);
+            params.emplace(id,x);
             // std::cout << "Sin: " << res << std::endl;
+        }
+        for(auto& [id,x] : params){
             {
                 std::lock_guard<std::mutex> lock(file_mutex);
-                out<<"Sin "<<x<<" = "<<res<<" id = "<<id<<std::endl;
+                out<<"Sin "<<x<<" = "<<server.request_result(id)<<" id = "<<id<<std::endl;
             }
         }
+
     });
 
     clients.emplace_back([&out,N,&server]() {
         ThreadRng rng;
+
+        std::unordered_map<int,double> params;
+
         for (int i = 0; i < N; i++){
             double x = rng.get_sqrt_arg();
-            auto [id, future] = server.add_task([](double x) { return fun_sqrt(x); }, x);
-            double res = future.get();
+            int id = server.add_task([](double x) { return fun_sqrt(x); }, x);
+            params.emplace(id,x);
+        }
+        for(auto& [id,x] : params){
             {
                 std::lock_guard<std::mutex> lock(file_mutex);
-                out << "Sqrt "<< x<< " = " << res <<" id = "<<id<<std::endl;
+                out << "Sqrt "<< x<< " = " << server.request_result(id) <<" id = "<<id<<std::endl;
             }
         }
+
     });
 
     clients.emplace_back([&out,N,&server]() {
         ThreadRng rng;
+
+        std::unordered_map<int,std::pair<int, int>> params;
+
         for (int i = 0; i < N; i++){
             int x = rng.get_pow_arg();
             int y = rng.get_pow_arg();
-            auto [id, future] = server.add_task([](double b, double e) { return fun_pow(b, e); }, x, y);
-            double res = future.get();
+            int id = server.add_task([](double b, double e) { return fun_pow(b, e); }, x, y);
+            params.emplace(id,std::make_pair(x,y));
+
+        }
+
+        for(auto& [id,x] : params){
             {
                 std::lock_guard<std::mutex> lock(file_mutex);
-                out << "Pow " << x << " " << y << " = " << res << " id = " << id << std::endl;
+                out << "Pow " << x.first << " " << x.second << " = " << server.request_result(id) << " id = " << id << std::endl;
             }
         }
     });
