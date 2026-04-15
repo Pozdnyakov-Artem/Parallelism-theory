@@ -70,10 +70,6 @@ private:
 
                 task();
 
-                // {
-                //     std::lock_guard<std::mutex> rlock(results_mutex);
-                //     promises.erase(id);
-                // }
             }
         }
     }
