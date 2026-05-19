@@ -43,21 +43,23 @@ int main(int argc, char* argv[]) {
     const double tol = cfg.tolerance;
     const int max_iter = cfg.max_iter;
 
-    double err;
+    double err = 1;
+    int iter = 0;
 
     std::vector<double> A(rows*rows, 0);
-    std::vector<double> Anew(rows*rows, 0);
+    // std::vector<double> Anew(rows*rows, 0);
 
     for (int j = 0; j < rows; j++) {
-        A[j*rows + 0] = 10.0 + (20.0 - 10.0) * j / (rows - 1);
-        A[j*rows + rows-1] = 20.0 + (30.0 - 20.0) * j / (rows - 1);
+        A[j*rows + 0] = 10.0 + (20.0 - 10.0) * static_cast<double>(j) / (rows - 1);
+        A[j*rows + rows-1] = 20.0 + (30.0 - 20.0) * static_cast<double>(j) / (rows - 1);
     }
     for (int i = 0; i < rows; i++) {
-        A[0*rows + i] = 10.0 + (20.0 - 10.0) * i / (rows - 1);
-        A[(rows-1)*rows + i] = 20.0 + (30.0 - 20.0) * i / (rows - 1);
+        A[0*rows + i] = 10.0 + (20.0 - 10.0) * static_cast<double>(j) / (rows - 1);
+        A[(rows-1)*rows + i] = 20.0 + (30.0 - 20.0) * static_cast<double>(j) / (rows - 1);
     }
 
-    #pragma acc data copy(A[:rows*rows]) copyin(Anew[:rows*rows]) {
+    #pragma acc data copy(A[:rows*rows]) create(Anew[:rows*rows]) 
+    {
         while ( err > tol && iter < max_iter ) {
             err=0.0;
 
@@ -81,10 +83,10 @@ int main(int argc, char* argv[]) {
 
     std::cout<<"Iter: "<<iter<<" err: "<<err<<std::endl;
 
-    if (N == 10 || N == 13) {
-        for (int j = 0; j < N; j++) {
-            for (int i = 0; i < N; i++) {
-                std::cout << A[j*N + i] << "\t";
+    if (rows == 10 || rows == 13) {
+        for (int j = 0; j < rows; j++) {
+            for (int i = 0; i < rows; i++) {
+                std::cout << A[j*rows + i] << "\t";
             }
             std::cout << "\n";
         }
