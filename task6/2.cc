@@ -54,8 +54,8 @@ int main(int argc, char* argv[]) {
         A[j*rows + rows-1] = 20.0 + (30.0 - 20.0) * static_cast<double>(j) / (rows - 1);
     }
     for (int i = 0; i < rows; i++) {
-        A[0*rows + i] = 10.0 + (20.0 - 10.0) * static_cast<double>(j) / (rows - 1);
-        A[(rows-1)*rows + i] = 20.0 + (30.0 - 20.0) * static_cast<double>(j) / (rows - 1);
+        A[0*rows + i] = 10.0 + (20.0 - 10.0) * static_cast<double>(i) / (rows - 1);
+        A[(rows-1)*rows + i] = 20.0 + (30.0 - 20.0) * static_cast<double>(i) / (rows - 1);
     }
 
     #pragma acc data copy(A[:rows*rows]) create(Anew[:rows*rows]) 
