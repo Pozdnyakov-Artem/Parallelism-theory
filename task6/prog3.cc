@@ -81,15 +81,6 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            // Обновление
-            #pragma acc parallel loop collapse(2) gang vector present(A_ptr, Anew_ptr)
-            for (int j = 1; j < rows - 1; ++j) {
-                for (int i = 1; i < rows - 1; ++i) {
-                    A_ptr[j * rows + i] = Anew_ptr[j * rows + i];
-                }
-            }
-
-            // Проверка ошибки только раз в N итераций
             if ((iter % error_check_interval == 0 && iter != 0) || iter == max_iter - 1) {
                 err = 0.0;
                 #pragma acc parallel loop collapse(2) gang vector reduction(max:err) present(A_ptr, Anew_ptr)
@@ -101,6 +92,14 @@ int main(int argc, char* argv[]) {
                 }
                 // Синхронизация: ждать, пока редукция завершится на устройстве
                 #pragma acc wait
+            }
+
+            // Обновление
+            #pragma acc parallel loop collapse(2) gang vector present(A_ptr, Anew_ptr)
+            for (int j = 1; j < rows - 1; ++j) {
+                for (int i = 1; i < rows - 1; ++i) {
+                    A_ptr[j * rows + i] = Anew_ptr[j * rows + i];
+                }
             }
             
             ++iter;
