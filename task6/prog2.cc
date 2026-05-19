@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            if (iter % error_check_interval == 0 || iter == max_iter - 1) {
+            if ((iter % error_check_interval == 0 && iter != 0) || iter == max_iter - 1) {
                 err = 0.0;
                 #pragma acc parallel loop tile(32,32) reduction(max:err) present(A_ptr, Anew_ptr)
                 for (int j = 1; j < rows - 1; ++j) {
