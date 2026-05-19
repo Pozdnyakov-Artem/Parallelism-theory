@@ -5,84 +5,90 @@
 
 namespace po = boost::program_options;
 
-auto parse_arguments(int argc, char* argv[]) {
+struct Config {
+    int grid_size;
+    double tolerance;
+    int max_iter;
+};
 
-    int grid_size, tolerance, max_iter;
-    po::options_description desc("Heat Equation Solver - Parameters");
+Config parse_arguments(int argc, char* argv[]) {
+    Config cfg{1024, 1e-6, 1000000}; // Значения по умолчанию
+    
+    po::options_description desc("Heat Equation Solver");
     desc.add_options()
-        ("help,h", "Show this help message")
-        ("size,s", po::value<int>(&grid_size)->default_value(1024),
-         "Grid dimension N (creates N x N matrix)")
-        ("tolerance,t", po::value<double>(&tolerance)->default_value(1e-6),
-         "Convergence tolerance (epsilon)")
-        ("max-iter,m", po::value<int>(&max_iter)->default_value(1000000),
-         "Maximum number of iterations");
+        ("help,h", "Show help")
+        ("size,s", po::value<int>(&cfg.grid_size), "Grid size N")
+        ("tolerance,t", po::value<double>(&cfg.tolerance), "Convergence tolerance")
+        ("max-iter,m", po::value<int>(&cfg.max_iter), "Max iterations");
 
     po::variables_map vm;
     try {
         po::store(po::parse_command_line(argc, argv, desc), vm);
         po::notify(vm);
-    } 
-    catch (const po::error& e) {
-        std::cerr << "Command line error: " << e.what() << "\n" << desc << "\n";
+    } catch (const po::error& e) {
+        std::cerr << "Error: " << e.what() << "\n" << desc << "\n";
         exit(EXIT_FAILURE);
     }
-
-    // Обработка флага помощи
-    if (vm.count("help")) {
-        std::cout << desc << "\n";
-        exit(EXIT_SUCCESS);
-    }
-
-    if (grid_size < 3) {
-        std::cerr << "Error: Grid size must be >= 3 (to fit boundaries + interior).\n";
-        exit(EXIT_FAILURE);
-    }
-    if (tolerance <= 0.0) {
-        std::cerr << "Error: Tolerance must be > 0.\n";
-        exit(EXIT_FAILURE);
-    }
-    if (max_iter <= 0) {
-        std::cerr << "Error: Max iterations must be > 0.\n";
-        exit(EXIT_FAILURE);
-    }
-
-    return grid_size, tolerance, max_iter;
+    
+    if (vm.count("help")) { std::cout << desc << "\n"; exit(EXIT_SUCCESS); }
+    if (cfg.grid_size < 3) { std::cerr << "Grid size must be >= 3\n"; exit(EXIT_FAILURE); }
+    
+    return cfg;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 
-    int rows, max_iter, tol;
-    int iter = 0;
+    Config cfg = parse_arguments(argc, argv);
+    const int rows = cfg.grid_size;
+    const double tol = cfg.tolerance;
+    const int max_iter = cfg.max_iter;
 
-    rows, tol, max_iter = parse_arguments(argc, argv);
+    double err;
 
     std::vector<double> A(rows*rows, 0);
-    A[0] = 10; A[rows-1]=20; A[rows*rows-1] = 30; A[rows*(rows-1)-1] = 20;
     std::vector<double> Anew(rows*rows, 0);
 
-    #pragma acc data copy(A[:rows*rows]) copyin(Anew[:rows*rows])
-    while ( err > tol && iter < iter_max ) {
-        err=0.0;
+    for (int j = 0; j < rows; j++) {
+        A[j*rows + 0] = 10.0 + (20.0 - 10.0) * j / (rows - 1);
+        A[j*rows + rows-1] = 20.0 + (30.0 - 20.0) * j / (rows - 1);
+    }
+    for (int i = 0; i < rows; i++) {
+        A[0*rows + i] = 10.0 + (20.0 - 10.0) * i / (rows - 1);
+        A[(rows-1)*rows + i] = 20.0 + (30.0 - 20.0) * i / (rows - 1);
+    }
 
-        #pragma acc parallel loop reduction(max:err) tile(32,32) present(A[0:rows*rows]) copy(Anew[0:rows*rows])
-        for( int j = 1; j < rows-1; j++) {
-            for(int i = 1; i < rows-1; i++) {
-                Anew[j*rows+i] = 0.25 * (A[j*rows+i+1] + A[j*rows+i-1] + A[(j-1)*rows+i] + A[(j+1)*rows+i]);
-                err = fmax(err, abs(Anew[j*rows+i] - A[j*rows+i]));
-            }
-        }
+    #pragma acc data copy(A[:rows*rows]) copyin(Anew[:rows*rows]) {
+        while ( err > tol && iter < max_iter ) {
+            err=0.0;
 
-        #pragma acc parallel loop tile(32,32) present(Anew[0:rows*rows]) copyout(A[0:rows*rows])
-        for( int j = 1; j < rows-1; j++) {
-            for( int i = 1; i < rows-1; i++ ) {
-                A[j*rows+i] = Anew[j*rows+i];
+            #pragma acc parallel loop reduction(max:err) tile(32,32) present(A, Anew)
+            for( int j = 1; j < rows-1; j++) {
+                for(int i = 1; i < rows-1; i++) {
+                    Anew[j*rows+i] = 0.25 * (A[j*rows+i+1] + A[j*rows+i-1] + A[(j-1)*rows+i] + A[(j+1)*rows+i]);
+                    err = fmax(err, fabs(Anew[j*rows+i] - A[j*rows+i]));
+                }
             }
+
+            #pragma acc parallel loop tile(32,32) present(Anew, A)
+            for( int j = 1; j < rows-1; j++) {
+                for( int i = 1; i < rows-1; i++ ) {
+                    A[j*rows+i] = Anew[j*rows+i];
+                }
+            }
+            iter++;
         }
-        iter++;
     }
 
     std::cout<<"Iter: "<<iter<<" err: "<<err<<std::endl;
+
+    if (N == 10 || N == 13) {
+        for (int j = 0; j < N; j++) {
+            for (int i = 0; i < N; i++) {
+                std::cout << A[j*N + i] << "\t";
+            }
+            std::cout << "\n";
+        }
+    }
 
     return 0;
 }
