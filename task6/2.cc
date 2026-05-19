@@ -83,6 +83,7 @@ int main(int argc, char* argv[]) {
             iter++;
         }
     }
+    const auto end{std::chrono::steady_clock::now()};
     const std::chrono::duration<double> dur{end-start};
     std::cout<<"Iter: "<<iter<<" err: "<<err<<" time "<<dur.count()<<std::endl;
 
