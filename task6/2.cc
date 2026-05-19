@@ -46,15 +46,12 @@ int main(int argc, char* argv[]) {
     double err = 1.0;
     int iter = 0;
 
-    // Выделяем векторы
     std::vector<double> A(rows * rows, 0.0);
     std::vector<double> Anew(rows * rows, 0.0);
 
-    // ✅ Получаем сырые указатели для OpenACC
-    double* __restrict__ A_ptr = A.data();
-    double* __restrict__ Anew_ptr = Anew.data();
+    double*  A_ptr = A.data();
+    double*  Anew_ptr = Anew.data();
 
-    // Граничные условия
     for (int j = 0; j < rows; ++j) {
         double coeff = static_cast<double>(j) / static_cast<double>(rows - 1);
         A_ptr[j * rows + 0] = 10.0 + (20.0 - 10.0) * coeff;
@@ -68,14 +65,12 @@ int main(int argc, char* argv[]) {
 
     const auto start{std::chrono::steady_clock::now()};
 
-    // ✅ OpenACC регион с сырыми указателями
     #pragma acc data copy(A_ptr[:rows*rows]) copy(Anew_ptr[:rows*rows])
     {
         while (err > tol && iter < max_iter) {
             err = 0.0;
 
-            // ✅ Вычисления: используем A_ptr, Anew_ptr
-            #pragma acc parallel loop reduction(max:err) present(A_ptr, Anew_ptr)
+            #pragma acc parallel loop reduction(max:err) tile(32,32) present(A_ptr, Anew_ptr)
             for (int j = 1; j < rows - 1; ++j) {
                 for (int i = 1; i < rows - 1; ++i) {
                     int idx = j * rows + i;
@@ -85,8 +80,7 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            // ✅ Обновление
-            #pragma acc parallel loop present(A_ptr, Anew_ptr)
+            #pragma acc parallel loop tile(32,32) present(A_ptr, Anew_ptr)
             for (int j = 1; j < rows - 1; ++j) {
                 for (int i = 1; i < rows - 1; ++i) {
                     A_ptr[j * rows + i] = Anew_ptr[j * rows + i];
@@ -100,7 +94,6 @@ int main(int argc, char* argv[]) {
     const std::chrono::duration<double> dur{end - start};
     std::cout << "Iter: " << iter << " err: " << err << " time " << dur.count() << std::endl;
 
-    // Вывод для отчёта
     if (rows == 10 || rows == 13) {
         std::cout << "\nFinal grid (" << rows << "x" << rows << "):\n";
         for (int j = 0; j < rows; ++j) {
