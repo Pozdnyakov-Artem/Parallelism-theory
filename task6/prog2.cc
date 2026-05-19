@@ -87,17 +87,17 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            if ((iter % error_check_interval == 0 && iter != 0) || iter == max_iter - 1) {
-                err = 0.0;
-                #pragma acc parallel loop reduction(max:err) present(A_ptr, Anew_ptr)
-                for (int j = 1; j < rows - 1; ++j) {
-                    for (int i = 1; i < rows - 1; ++i) {
-                        int idx = j * rows + i;
-                        err = fmax(err, fabs(Anew_ptr[idx] - A_ptr[idx]));
-                    }
+            // if ((iter % error_check_interval == 0 && iter != 0) || iter == max_iter - 1) {
+            err = 0.0;
+            #pragma acc parallel loop reduction(max:err) present(A_ptr, Anew_ptr)
+            for (int j = 1; j < rows - 1; ++j) {
+                for (int i = 1; i < rows - 1; ++i) {
+                    int idx = j * rows + i;
+                    err = fmax(err, fabs(Anew_ptr[idx] - A_ptr[idx]));
                 }
-                #pragma acc wait
             }
+            //     #pragma acc wait
+            // }
             
             ++iter;
         }
