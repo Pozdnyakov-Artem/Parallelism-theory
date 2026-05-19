@@ -67,8 +67,6 @@ int main(int argc, char* argv[]) {
 
     const int error_check_interval = 1000;
 
-const int error_check_interval = 1000;  // Проверять ошибку каждые 1000 итераций
-
     #pragma acc data copy(A_ptr[:rows*rows]) copy(Anew_ptr[:rows*rows])
     {
         while (err > tol && iter < max_iter) {
