@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            #pragma acc parallel collapse(2) vector loop present(Anew, A)
+            #pragma acc parallel loop collapse(2) vector present(Anew, A)
             for( int j = 1; j < rows-1; j++) {
                 for( int i = 1; i < rows-1; i++ ) {
                     A[j*rows+i] = Anew[j*rows+i];
