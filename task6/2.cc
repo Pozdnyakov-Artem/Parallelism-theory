@@ -1,6 +1,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <chrono>
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
@@ -58,12 +59,14 @@ int main(int argc, char* argv[]) {
         A[(rows-1)*rows + i] = 20.0 + (30.0 - 20.0) * static_cast<double>(i) / (rows - 1);
     }
 
+    const auto start{std::chrono::steady_clock::now()};
+
     #pragma acc data copy(A[:rows*rows]) create(Anew[:rows*rows]) 
     {
         while ( err > tol && iter < max_iter ) {
             err=0.0;
 
-            #pragma acc parallel loop collapse(2) vector reduction(max:err) present(A, Anew)
+            #pragma acc parallel loop gang vector reduction(max:err) present(A, Anew)
             for( int j = 1; j < rows-1; j++) {
                 for(int i = 1; i < rows-1; i++) {
                     Anew[j*rows+i] = 0.25 * (A[j*rows+i+1] + A[j*rows+i-1] + A[(j-1)*rows+i] + A[(j+1)*rows+i]);
@@ -71,7 +74,7 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            #pragma acc parallel loop collapse(2) vector present(Anew, A)
+            #pragma acc parallel loop gang vector present(Anew, A)
             for( int j = 1; j < rows-1; j++) {
                 for( int i = 1; i < rows-1; i++ ) {
                     A[j*rows+i] = Anew[j*rows+i];
@@ -80,8 +83,8 @@ int main(int argc, char* argv[]) {
             iter++;
         }
     }
-
-    std::cout<<"Iter: "<<iter<<" err: "<<err<<std::endl;
+    const std::chrono::duration<double> dur{end-start};
+    std::cout<<"Iter: "<<iter<<" err: "<<err<<" time "<<dur.count()<<std::endl;
 
     if (rows == 10 || rows == 13) {
         for (int j = 0; j < rows; j++) {
