@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     int iter = 0;
 
     std::vector<double> A(rows*rows, 0);
-    // std::vector<double> Anew(rows*rows, 0);
+    std::vector<double> Anew(rows*rows, 0);
 
     for (int j = 0; j < rows; j++) {
         A[j*rows + 0] = 10.0 + (20.0 - 10.0) * static_cast<double>(j) / (rows - 1);
